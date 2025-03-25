@@ -1,22 +1,27 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Button, Card, TextField } from "@mui/material";
+import { Button, TextField } from "@mui/material";
 import { useForm } from "react-hook-form";
 import { useActionState, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
-import { onCustomerInfoSubmit } from "./customer-info-form-submit";
+import {
+  CustomerInfoState,
+  onCustomerInfoSubmit,
+} from "./customer-info-form-submit";
 import {
   CustomerDataSchemaType,
   CustomerInfoSchema,
 } from "./customer-info-form-schema";
 
 export interface CustomerInfoFormProps {
-  onSubmitCallBack: void;
+  onSuccessCallBack: (data: CustomerInfoState) => void;
+  initValues?: CustomerInfoState;
 }
 
-export default function CustomerInfoForm() {
-  const router = useRouter();
+export default function CustomerInfoForm({
+  onSuccessCallBack,
+  initValues,
+}: CustomerInfoFormProps) {
   const [state, formAction, isPending] = useActionState(onCustomerInfoSubmit, {
     message: "",
   });
@@ -24,29 +29,35 @@ export default function CustomerInfoForm() {
 
   const {
     register,
-    formState: { isDirty, errors },
+    formState: { errors },
     handleSubmit,
   } = useForm<CustomerDataSchemaType>({
     resolver: zodResolver(CustomerInfoSchema),
-    defaultValues: { name: "", ...(state?.fields ?? {}) },
+    defaultValues: {
+      name: "",
+      ...(state?.fields ?? {}),
+      ...(initValues?.fields ?? {}),
+    },
   });
 
   useEffect(() => {
     if (state.isSuccess) {
+      console.log(state);
       console.log("success, trigger redirect");
-      router.push("/verify-customer");
+      onSuccessCallBack(state);
     }
-  }, [router, state.isSuccess]);
+  }, [onSuccessCallBack, state, state.isSuccess]);
 
   return (
-    <Card className="bg-transparent p-4">
+    <div className="flex flex-col">
       <form
         ref={signInFormRef}
-        className="grid grid-cols-2 gap-4"
+        className="grid grid-flow-col grid-rows-3 gap-4 py-4"
         action={formAction}
         onSubmit={handleSubmit(() => signInFormRef.current?.submit())}
       >
         <TextField
+          required
           {...register("name")}
           label="name"
           className="text-field"
@@ -54,6 +65,7 @@ export default function CustomerInfoForm() {
           helperText={errors.name?.message}
         />
         <TextField
+          required
           {...register("surname")}
           label="surname"
           className="text-field"
@@ -62,33 +74,44 @@ export default function CustomerInfoForm() {
         />
 
         <TextField
+          required
           {...register("id")}
           label="id"
-          className="text-field"
+          className="text-field row-start-1"
           error={!!errors.id}
           helperText={errors.id?.message}
         />
         <TextField
+          required
           {...register("bankAccount")}
           label="bankAccount"
-          className="text-field col-start-1"
+          className="text-field row-start-2"
           error={!!errors.bankAccount}
           helperText={errors.bankAccount?.message}
         />
 
-        {state.message !== "" && !isDirty && (
+        {state.message !== "" && (
           <div className="text-red-500"> {state.message}</div>
         )}
-
-        <Button
-          disabled={isPending}
-          onClick={() => handleSubmit}
-          className="self-end w-24 px-10 bg-grey text-white  col-start-1"
-          type="submit"
-        >
-          submit
-        </Button>
+        <div className="flex flex-row justify-end">
+          <Button
+            disabled={isPending}
+            onClick={() => handleSubmit}
+            className="w-24  py-4 col-start-1"
+            type="submit"
+          >
+            back
+          </Button>
+          <Button
+            disabled={isPending}
+            onClick={() => handleSubmit}
+            className="w-24  py-4 "
+            type="submit"
+          >
+            next
+          </Button>
+        </div>
       </form>
-    </Card>
+    </div>
   );
 }

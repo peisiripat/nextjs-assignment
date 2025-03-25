@@ -4,3 +4,7 @@ export type CustomerData = {
   id: string;
   bankAccount: string;
 };
+
+export type CustomerUploadFile = {
+  file?: File;
+};

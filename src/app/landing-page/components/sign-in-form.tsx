@@ -67,6 +67,7 @@ export default function SignInForm() {
           onClick={() => handleSubmit}
           className="self-end w-24 px-10 bg-grey text-white"
           type="submit"
+          variant="contained"
         >
           submit
         </Button>
